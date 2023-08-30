@@ -14,14 +14,14 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm install'
-         sh '<<Build Command>>'
+         sh 'node app.js'
       }
     }  
     
             
     stage('Test') {
       steps {
-        sh 'node app.js'
+        sh 'pm2 start app'
       }
     }
   }
