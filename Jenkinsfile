@@ -1,3 +1,4 @@
+
 pipeline {
   agent any
     
@@ -14,15 +15,9 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm install'
-         sh 'node app.js'
+         sh 'pm2 start npm --name "demo" -- start'
       }
     }  
     
-            
-    stage('Test') {
-      steps {
-        sh 'pm2 start app'
-      }
-    }
   }
 }
