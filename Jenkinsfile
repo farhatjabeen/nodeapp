@@ -15,7 +15,7 @@ pipeline {
     stage('Build') {
       steps {
         sh 'npm install'
-         sh 'pm2 restart all'
+         sh 'pm2 start app.js --name "hello" --start'
       }
     }  
     
