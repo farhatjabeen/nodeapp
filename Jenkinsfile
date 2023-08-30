@@ -1,30 +1,29 @@
-//declarative pipeline
+#!/usr/bin/env groovy
 
-pipeline{
-  stages{
-    stage('Clone'){
-      steps {
-        git branch: 'master'
-        url: '"
-      }
+pipeline {
+
+    agent {
+        docker {
+            image 'node'
+            args '-u root'
+        }
     }
-     stage('Build'){
-      steps{
-        sh ''
-        docker build -t nodeapp:${BUILD_NUMBER}
-      }
-     }
-     stage('Test'){
-        steps{
-          sh ''
-          docker run -it nodeapp:$(BUILD_NUMBER)
-      }
-     }
-      stage('Package'){
-        steps{
-          sh ''
-          docker push yashpimple22/nodeapp:$(BUILD_NUMBER)
-          '''
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building...'
+                sh 'npm install'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Testing...'
+                sh 'npm test'
+            }
+        }
+    }
+}
       }
      }
   }
