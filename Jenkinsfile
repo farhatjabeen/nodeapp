@@ -9,93 +9,75 @@ pipeline {
     }
    
     stages {
-        
-        stage('Push Notification') {
+        stage('Logging into AWS ECR') {
             steps {
                 script {
-                    def telegramMessage = ""
-                    def isError = false
-
-                    try {
-
-                        stage('Logging into AWS ECR') {
-                            steps {
-                                script {
-                                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-                                }
-                 
-                            }
-                        }
-
-                        stage('Cloning Git') {
-                            steps {
-                                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'My-git', url: 'https://github.com/farhatjabeen/nodeapp.git']])     
-                            }
-                        }
-
-                        stage('Building image') {
-                            steps{
-                                script {
-                                    dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-                                }
-                            }
-                        }
-
-                        stage('Pushing to ECR') {
-                            steps{  
-                                script {
-                                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
-                                    sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-                                }
-                            }
-                        }
-
-                        stage('Build') {
-                            steps {
-                                sh 'npm install'
-                                sh 'pm2 restart 0'
-                            }
-                        }
-                        
-                        telegramMessage = "<b>Project</b> : node_app \\n" +
-                                         "<b>Branch</b>: main \\n" +
-                                         "<b>Build</b>: OK \\n" +
-                                         "<b>Test suite</b> = TEST CASE PASSED" 
-         
-                    } catch (Exception ex) {
-                        // An error occurred in one of the pipeline stages
-                        isError = true
-                        def failedStage = env.STAGE_NAME ?: "Unknown Stage"
-                        def errorMessage = ex.getMessage() ?: "Unknown Error"
-                        telegramMessage = "<b>Project</b> : node_app \\n" +
-                                         "<b>Branch</b>: main \\n" +
-                                         "<b>Build</b>: ERROR \\n" +
-                                         "<b>Test suite</b> = TEST CASE FAILED in stage: ${failedStage} \\n" +
-                                         "<b>Error Message</b>: ${errorMessage}"
-                    } finally {
-                        // Print to verify values
-                        echo "Telegram Message: ${telegramMessage}"
-                        echo "T: ${T}"
-                        echo "C: ${C}"
-
-                        // Send the notification to Telegram
-                        
-                                withCredentials([string(credentialsId: 'telegramTocken', variable:'T'),
-                                                  string(credentialsId: 'telegramChatid', variable:'C')]) {
-                              sh """
-                                 curl -s -X POST https://api.telegram.org/bot\${T}/sendMessage -d chat_id=\${C} -d parse_mode="HTML" -d text="${telegramMessage}"
-                                  """
-                        }
-                    }
-
-                    // Mark the build as failed if an error occurred
-                    if (isError) {
-                        currentBuild.result = "FAILURE"
-                    } else {
-                        currentBuild.result = "SUCCESS"
-                    }
+                sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
                 }
+                 
+            }
+        }
+        
+        stage('Cloning Git') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'My-git', url: 'https://github.com/farhatjabeen/nodeapp.git']])     
+            }
+        }
+  
+    // Building Docker images
+    stage('Building image') {
+      steps{
+        script {
+          dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+        }
+      }
+    }
+   
+    // Uploading Docker images into AWS ECR
+    stage('Pushing to ECR') {
+     steps{  
+         script {
+                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
+                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+         }
+        }
+      }
+    stage('Build') {
+      steps {
+        sh 'npm install'
+         sh 'pm2 restart 0'
+        }
+      }  
+
+    stage('Push Notification') {
+        steps {
+            script {
+                def buildStatus = env.BUILD_STATUS ?: 'UNKNOWN'
+                def messageText
+
+                if (buildStatus == 'SUCCESS') {
+                    messageText = "<b>Test suite</b> = TEST CASE PASSED"
+                                      
+                } else {
+                    messageText = "<b>Test suite</b> = TEST CASE FAILED"
+                                      
+                }
+
+                withCredentials([
+                    string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+                    string(credentialsId: 'telegramChatid', variable: 'CHAT_ID')
+                ]) {
+                    sh """
+                        curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+                        -d "chat_id=${CHAT_ID}" \
+                        -d "parse_mode=HTML" \
+                        -d "text=${messageText}"
+                    """
+                 }
             }
         }
     }
+    }
 }
+        
+        
