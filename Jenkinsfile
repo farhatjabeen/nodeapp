@@ -49,34 +49,34 @@ pipeline {
         }
       }  
 
-    stage('Push Notification') {
-        steps {
-            script {
-                def buildStatus = env.BUILD_STATUS ?: 'UNKNOWN'
-                def messageText
+        stage('Push Notification') {
+            steps {
+                script {
+                    def buildStatus = env.BUILD_STATUS ?: 'UNKNOWN'
+                    def messageText
 
-                if (buildStatus == 'SUCCESS') {
-                    messageText = "<b>Test suite</b> = TEST CASE PASSED"
+                    if (buildStatus == 'SUCCESS') {
+                        messageText = "<b>Test suite</b> = TEST CASE PASSED"
                                       
-                } else {
-                    messageText = "<b>Test suite</b> = TEST CASE FAILED"
+                    } else {
+                        messageText = "<b>Test suite</b> = TEST CASE FAILED"
                                       
+                    }
+
+                    withCredentials([
+                        string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+                        string(credentialsId: 'telegramChatid', variable: 'CHAT_ID')
+                    ]) {
+                        sh """
+                            curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+                            -d "chat_id=${CHAT_ID}" \
+                            -d "parse_mode=HTML" \
+                            -d "text=${messageText}"
+                        """
+                    }
                 }
-
-                withCredentials([
-                    string(credentialsId: 'telegramToken', variable: 'TOKEN'),
-                    string(credentialsId: 'telegramChatid', variable: 'CHAT_ID')
-                ]) {
-                    sh """
-                        curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-                        -d "chat_id=${CHAT_ID}" \
-                        -d "parse_mode=HTML" \
-                        -d "text=${messageText}"
-                    """
-                 }
             }
         }
-    }
     }
 }
         
