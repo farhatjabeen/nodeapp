@@ -17,49 +17,51 @@ pipeline {
                     def isError = false
 
                     try {
-                         stage('Logging into AWS ECR') {
+
+                        stage('Logging into AWS ECR') {
                             steps {
                                 script {
                                 sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-                }
+                                }
                  
-            }
-        }
-        
-        stage('Cloning Git') {
-            steps {
-                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'My-git', url: 'https://github.com/farhatjabeen/nodeapp.git']])     
-            }
-        }
-  
-    // Building Docker images
-    stage('Building image') {
-      steps{
-        script {
-          dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-        }
-      }
-    }
-   
-    // Uploading Docker images into AWS ECR
-    stage('Pushing to ECR') {
-     steps{  
-         script {
-                sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
-                sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
-         }
-        }
-      }
-    stage('Build') {
-      steps {
-        sh 'npm install'
-         sh 'pm2 restart 0'
-        }
-      }  
-      telegramMessage = "<b>Project</b> : node_app \\n" +
+                            }
+                        }
+
+                        stage('Cloning Git') {
+                            steps {
+                                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'My-git', url: 'https://github.com/farhatjabeen/nodeapp.git']])     
+                            }
+                        }
+
+                        stage('Building image') {
+                            steps{
+                                script {
+                                    dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                                }
+                            }
+                        }
+
+                        stage('Pushing to ECR') {
+                            steps{  
+                                script {
+                                    sh "docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"
+                                    sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                                }
+                            }
+                        }
+
+                        stage('Build') {
+                            steps {
+                                sh 'npm install'
+                                sh 'pm2 restart 0'
+                            }
+                        }
+                        
+                        telegramMessage = "<b>Project</b> : node_app \\n" +
                                          "<b>Branch</b>: main \\n" +
                                          "<b>Build</b>: OK \\n" +
-                                         "<b>Test suite</b> = TEST CASE PASSED"
+                                         "<b>Test suite</b> = TEST CASE PASSED" 
+         
                     } catch (Exception ex) {
                         // An error occurred in one of the pipeline stages
                         isError = true
