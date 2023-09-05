@@ -10,6 +10,13 @@ pipeline {
    
     stages {
         
+        stage('Push Notification') {
+            steps {
+                script {
+                    def telegramMessage = ""
+                    def isError = false
+
+                    try {
          stage('Logging into AWS ECR') {
             steps {
                 script {
@@ -49,5 +56,44 @@ pipeline {
          sh 'pm2 restart 0'
         }
       }  
+      telegramMessage = "<b>Project</b> : node_app \\n" +
+                                         "<b>Branch</b>: main \\n" +
+                                         "<b>Build</b>: OK \\n" +
+                                         "<b>Test suite</b> = TEST CASE PASSED"
+                    } catch (Exception ex) {
+                        // An error occurred in one of the pipeline stages
+                        isError = true
+                        def failedStage = env.STAGE_NAME ?: "Unknown Stage"
+                        def errorMessage = ex.getMessage() ?: "Unknown Error"
+                        telegramMessage = "<b>Project</b> : node_app \\n" +
+                                         "<b>Branch</b>: main \\n" +
+                                         "<b>Build</b>: ERROR \\n" +
+                                         "<b>Test suite</b> = TEST CASE FAILED in stage: ${failedStage} \\n" +
+                                         "<b>Error Message</b>: ${errorMessage}"
+                    } finally {
+                        // Print to verify values
+                        echo "Telegram Message: ${telegramMessage}"
+                        echo "T: ${T}"
+                        echo "C: ${C}"
+
+                        // Send the notification to Telegram
+                        
+                                withCredentials([string(credentialsId: 'telegramTocken', variable:'T'),
+                                                  string(credentialsId: 'telegramChatid', variable:'C')]) {
+                              sh """
+                                 curl -s -X POST https://api.telegram.org/bot\${T}/sendMessage -d chat_id=\${C} -d parse_mode="HTML" -d text="${telegramMessage}"
+                                  """
+                        }
+                    }
+
+                    // Mark the build as failed if an error occurred
+                    if (isError) {
+                        currentBuild.result = "FAILURE"
+                    } else {
+                        currentBuild.result = "SUCCESS"
+                    }
+                }
+            }
+        }
     }
 }
