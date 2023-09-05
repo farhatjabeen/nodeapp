@@ -3,7 +3,7 @@ pipeline {
     environment {
         AWS_ACCOUNT_ID="812422958103"
         AWS_DEFAULT_REGION="ap-south-1"
-        IMAGE_REPO_NAME="dockerrep"
+        IMAGE_REPO_NAME="docker-py"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
     }
