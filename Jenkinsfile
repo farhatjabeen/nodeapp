@@ -1,10 +1,10 @@
 pipeline {
     agent any
     environment {
-        AWS_ACCOUNT_ID = "812422958103"
-        AWS_DEFAULT_REGION = "ap-south-1"
-        IMAGE_REPO_NAME = "dockerrep"
-        IMAGE_TAG = "latest"
+        AWS_ACCOUNT_ID="812422958103"
+        AWS_DEFAULT_REGION="ap-south-1"
+        IMAGE_REPO_NAME="dockerrep"
+        IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
     }
 
@@ -19,7 +19,7 @@ pipeline {
 
         stage('Cloning Git') {
             steps {
-                checkout scm
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'My-git', url: 'https://github.com/farhatjabeen/nodeapp.git']])     
             }
         }
 
@@ -44,6 +44,7 @@ pipeline {
 
         stage('Build') {
             steps {
+            
                 sh 'pm2 restart 0'
             }
         }
@@ -52,9 +53,9 @@ pipeline {
             steps {
                 script {
                     def buildStatus = env.BUILD_STATUS ?: 'UNKNOWN'
-                    def commitInfo = sh(script: 'git log -1 --format="%an"', returnStatus: true).trim()
-                    def commitId = sh(script: 'git log -1 --format="%H"', returnStatus: true).trim()
-                    def commitMsg = sh(script: 'git log -1 --format="%s"', returnStatus: true).trim()
+                    def commitInfo = "Committed by: ${env.GIT_COMMIT_AUTHOR_NAME}"
+                    def commitId = "Commit ID: ${env.GIT_COMMIT}"
+                    def commitMsg = "Commit Message: ${env.GIT_COMMIT_MESSAGE}"
                     def messageText
 
                     if (buildStatus == 'FAILURE') {
@@ -68,10 +69,11 @@ pipeline {
                         messageText += "Status: SUCCESS\n"
                         messageText += "Committed by: ${commitInfo}\n"
                         messageText += "Commit ID: ${commitId}\n"
+                        
                     }
 
                     withCredentials([
-                        string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+                        string(credentialsId: 'telegramTocken', variable: 'TOKEN'),
                         string(credentialsId: 'telegramChatid', variable: 'CHAT_ID')
                     ]) {
                         sh """
