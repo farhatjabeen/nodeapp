@@ -53,8 +53,8 @@ pipeline {
             steps {
                 script {
                     def buildStatus = env.BUILD_STATUS ?: 'UNKNOWN'
-                    def commitInfo = "${sh('git log -1 --format="%an"')}"
-                    echo "Git Commit Info: ${commitInfo}"
+                    def commitInfo = sh(script: 'git log -1 --format="%an"', returnStdout: true).trim()
+                    //echo "Git Commit Info: ${commitInfo}"
                     //def commitInfo = "Committed by: ${env.GIT_COMMIT_AUTHOR_NAME}"
                     def commitId = " ${env.GIT_COMMIT}"
                     def commitMsg = "Commit Message: ${env.GIT_COMMIT_MESSAGE}"
