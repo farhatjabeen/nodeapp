@@ -3,9 +3,11 @@ pipeline {
     environment {
         AWS_ACCOUNT_ID="812422958103"
         AWS_DEFAULT_REGION="ap-south-1"
-        IMAGE_REPO_NAME="docker-py"
+        IMAGE_REPO_NAME="dockerrep"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+        TELEGRAM_API_TOKEN = credentials('6314632932:AAGWlEkLA-RhwIHiTSGUmpJjNceyRRLsIVc') // Use the ID of your credentials
+        TELEGRAM_CHAT_ID = '1664009557'
     }
    
     stages {
@@ -44,38 +46,46 @@ pipeline {
       }
     stage('Build') {
       steps {
+        sh 'npm install'
          sh 'pm2 restart 0'
         }
       }  
 
-        stage('Push Notification') {
-            steps {
-                script {
-                    def buildStatus = env.BUILD_STATUS ?: 'UNKNOWN'
-                    def messageText
-
-                    if (buildStatus == 'SUCCESS') {
-                        messageText = "<b>Test suite</b> = TEST CASE PASSED"
-                                      
-                    } else {
-                        messageText = "<b>Test suite</b> = TEST CASE FAILED"
-                                      
-                    }
-
-                    withCredentials([
-                        string(credentialsId: 'telegramTocken', variable: 'TOKEN'),
-                        string(credentialsId: 'telegramChatid', variable: 'CHAT_ID')
-                    ]) {
-                        sh """
-                            curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-                            -d "chat_id=${CHAT_ID}" \
-                            -d "parse_mode=HTML" \
-                            -d "text=${messageText}"
-                        """
-                    }
-                }
+    
+    }
+    post {
+        success {
+            script {
+                def message = "Build Success! 🎉"
+                sendTelegramMessage(message)
             }
         }
+
+        failure {
+            script {
+                def message = "Build Failure! 😞"
+                sendTelegramMessage(message)
+            }
+        }
+    }
+}
+
+def sendTelegramMessage(String message) {
+    def url = "https://api.telegram.org/bot${env.TELEGRAM_API_TOKEN}/sendMessage"
+    def payload = [
+        chat_id: env.TELEGRAM_CHAT_ID,
+        text: message,
+    ]
+
+    def response = httpRequest(
+        url: url,
+        contentType: 'APPLICATION_JSON',
+        httpMode: 'POST',
+        requestBody: groovy.json.JsonOutput.toJson(payload)
+    )
+
+    if (response.status != 200) {
+        error("Failed to send Telegram message. Status: ${response.status}, Response: ${response.content}")
     }
 }
         
