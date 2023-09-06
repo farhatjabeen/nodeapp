@@ -55,7 +55,7 @@ pipeline {
                     def buildStatus = env.BUILD_STATUS ?: 'UNKNOWN'
                     def messageText
 
-                    if (buildStatus == 'SUCCESS') {
+                    if (buildStatus == 'FAILURE') {
                         messageText = "<b>Test suite</b> = TEST CASE FAILED"
                                       
                     } else {
