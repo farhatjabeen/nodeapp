@@ -6,7 +6,7 @@ pipeline {
         IMAGE_REPO_NAME="dockerrep"
         IMAGE_TAG="latest"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
-        TELEGRAM_API_TOKEN = credentials('6314632932:AAGWlEkLA-RhwIHiTSGUmpJjNceyRRLsIVc') // Use the ID of your credentials
+        TELEGRAM_API_TOKEN = credentials('telegramTocken') // Use the ID of your credentials
         TELEGRAM_CHAT_ID = '1664009557'
     }
    
