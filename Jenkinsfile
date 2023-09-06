@@ -67,9 +67,7 @@ pipeline {
                     } else {
                         messageText = "Jenkins job: nodeapp\n"
                         messageText += "Status: SUCCESS"
-                         messageText += "Committed by: ${commitInfo}\n"
-                        messageText += "Commit ID: ${commitId}\n"
-                        messageText += "Commit Message: ${commitMsg}"
+                        
                     }
 
                     withCredentials([
