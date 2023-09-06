@@ -59,14 +59,17 @@ pipeline {
                     def messageText
 
                     if (buildStatus == 'FAILURE') {
-                        messageText = "Jenkins job: digigrain/digigrain_user\n"
+                        messageText = "Jenkins job: nodeapp\n"
                         messageText += "Status: FAILURE\n"
                         messageText += "Committed by: ${commitInfo}\n"
                         messageText += "Commit ID: ${commitId}\n"
                         messageText += "Commit Message: ${commitMsg}"
                     } else {
-                        messageText = "Jenkins job: digigrain/digigrain_user\n"
+                        messageText = "Jenkins job: nodeapp\n"
                         messageText += "Status: SUCCESS"
+                         messageText += "Committed by: ${commitInfo}\n"
+                        messageText += "Commit ID: ${commitId}\n"
+                        messageText += "Commit Message: ${commitMsg}"
                     }
 
                     withCredentials([
