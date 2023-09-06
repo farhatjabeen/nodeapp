@@ -56,10 +56,10 @@ pipeline {
                     def messageText
 
                     if (buildStatus == 'SUCCESS') {
-                        messageText = "<b>Test suite</b> = TEST CASE PASSED"
+                        messageText = "<b>Test suite</b> = TEST CASE FAILED"
                                       
                     } else {
-                        messageText = "<b>Test suite</b> = TEST CASE FAILED"
+                        messageText = "<b>Test suite</b> = TEST CASE PASSED"
                                       
                     }
 
