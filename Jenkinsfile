@@ -63,7 +63,7 @@ pipeline {
                     }
 
                     withCredentials([
-                        string(credentialsId: 'telegramToken', variable: 'TOKEN'),
+                        string(credentialsId: 'telegramTocken', variable: 'TOKEN'),
                         string(credentialsId: 'telegramChatid', variable: 'CHAT_ID')
                     ]) {
                         sh """
